@@ -12,36 +12,50 @@ def shorten_link(token, url):
     }
     response = requests.get(api_url, params=params)
     response.raise_for_status()
-    data = response.json()
-    return data["response"]["short_url"]
+    response_json = response.json()
+    return response_json["response"]["short_url"]
 
 
-def count_clicks(short_url, token):
+def count_clicks(token, short_url):
     api_url = "https://api.vk.com/method/utils.getLinkStats"
     parsed_url = urlparse(short_url)
-    path = parsed_url.path
-    key = path[1:]
+    key = parsed_url.path.lstrip("/")
     params = {"key": key, "access_token": token, "v": "5.131", "extended": 1}
     response = requests.get(api_url, params=params)
     response.raise_for_status()
-    data = response.json()
-    stats = data["response"]["stats"]
+    response_json = response.json()
+    stats = response_json["response"]["stats"]
     clicks = sum(day["views"] for day in stats)
     return clicks
 
 
-def is_shorten_link(url):
-    parsed_url = urlparse(url)
-    return parsed_url.netloc == "vk.cc"
+def is_shorten_link(token, url):
+    try:
+        parsed_url = urlparse(url)
+        if parsed_url.netloc != "vk.cc":
+            return False
+        key = parsed_url.path.lstrip("/")
+        api_url = "https://api.vk.com/method/utils.getLinkStats"
+        params = {"key": key, "access_token": token, "v": "5.131"}
+        response = requests.get(api_url, params=params)
+        response.raise_for_status()
+        return True
+    except requests.exceptions.RequestException:
+        return False
 
 
 if __name__ == "__main__":
     url = input("Введите ссылку: ")
-    token = os.getenv("API_TOKEN")
     try:
-        short_url = shorten_link(token, url)
-        print("Сокращенная ссылка:", short_url)
-        clicks = count_clicks(short_url, token)
-        print("Переходы", clicks)
+        token = os.environ["VK_TOKEN"]
+    except KeyError:
+        print("Ошибка: Не указана переменная окружения VK_TOKEN.")
+    try:
+        if is_shorten_link(token, url):
+            clicks = count_clicks(token, url)
+            print("Переходы:", clicks)
+        else:
+            short_url = shorten_link(token, url)
+            print("Сокращенная ссылка:", short_url)
     except requests.exceptions.RequestException as e:
         print(f"Ошибка: {e}")
