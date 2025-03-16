@@ -12,8 +12,10 @@ def shorten_link(token, url):
     }
     response = requests.get(api_url, params=params)
     response.raise_for_status()
-    response_json = response.json()
-    return response_json["response"]["short_url"]
+    response_dict = response.json()
+    if "error" in response_dict:
+        raise requests.exceptions.RequestException(response_dict["error"]["error_msg"])
+    return response_dict["response"]["short_url"]
 
 
 def count_clicks(token, short_url):
@@ -23,8 +25,10 @@ def count_clicks(token, short_url):
     params = {"key": key, "access_token": token, "v": "5.131", "extended": 1}
     response = requests.get(api_url, params=params)
     response.raise_for_status()
-    response_json = response.json()
-    stats = response_json["response"]["stats"]
+    response_dict = response.json()
+    if "error" in response_dict:
+        raise requests.exceptions.RequestException(response_dict["error"]["error_msg"])
+    stats = response_dict["response"]["stats"]
     clicks = sum(day["views"] for day in stats)
     return clicks
 
@@ -39,6 +43,9 @@ def is_shorten_link(token, url):
         params = {"key": key, "access_token": token, "v": "5.131"}
         response = requests.get(api_url, params=params)
         response.raise_for_status()
+        response_dict = response.json()
+        if "error" in response_dict:
+            return False
         return True
     except requests.exceptions.RequestException:
         return False
