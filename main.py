@@ -12,10 +12,10 @@ def shorten_link(token, url):
     }
     response = requests.get(api_url, params=params)
     response.raise_for_status()
-    response_dict = response.json()
-    if "error" in response_dict:
-        raise requests.exceptions.RequestException(response_dict["error"]["error_msg"])
-    return response_dict["response"]["short_url"]
+    content = response.json()
+    if "error" in content:
+        raise requests.exceptions.RequestException(content["error"]["error_msg"])
+    return content["response"]["short_url"]
 
 
 def count_clicks(token, short_url):
@@ -25,30 +25,25 @@ def count_clicks(token, short_url):
     params = {"key": key, "access_token": token, "v": "5.131", "extended": 1}
     response = requests.get(api_url, params=params)
     response.raise_for_status()
-    response_dict = response.json()
-    if "error" in response_dict:
-        raise requests.exceptions.RequestException(response_dict["error"]["error_msg"])
-    stats = response_dict["response"]["stats"]
+    content = response.json()
+    if "error" in content:
+        raise requests.exceptions.RequestException(content["error"]["error_msg"])
+    stats = content["response"]["stats"]
     clicks = sum(day["views"] for day in stats)
     return clicks
 
 
 def is_shorten_link(token, url):
-    try:
-        parsed_url = urlparse(url)
-        if parsed_url.netloc != "vk.cc":
-            return False
-        key = parsed_url.path.lstrip("/")
-        api_url = "https://api.vk.com/method/utils.getLinkStats"
-        params = {"key": key, "access_token": token, "v": "5.131"}
-        response = requests.get(api_url, params=params)
-        response.raise_for_status()
-        response_dict = response.json()
-        if "error" in response_dict:
-            return False
-        return True
-    except requests.exceptions.RequestException:
+    parsed_url = urlparse(url)
+    if parsed_url.netloc != "vk.cc":
         return False
+    key = parsed_url.path.lstrip("/")
+    api_url = "https://api.vk.com/method/utils.getLinkStats"
+    params = {"key": key, "access_token": token, "v": "5.131"}
+    response = requests.get(api_url, params=params)
+    response.raise_for_status()
+    content = response.json()
+    return "error" not in content
 
 
 if __name__ == "__main__":
