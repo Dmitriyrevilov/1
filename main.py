@@ -2,6 +2,7 @@ import requests
 import os
 from urllib.parse import urlparse
 import argparse
+from dotenv import load_dotenv
 
 
 def shorten_link(token, url):
@@ -48,6 +49,7 @@ def is_shorten_link(token, url):
 
 
 if __name__ == "__main__":
+    load_dotenv()
     parser = argparse.ArgumentParser(
         description="Сокращает ссылки или показывает количество переходов по сокращенной ссылке VK."
     )
@@ -55,7 +57,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     url = args.url
     try:
-        token = os.environ["VK_TOKEN"]
+        token = os.getenv("VK_TOKEN")
     except KeyError:
         print("Ошибка: Не указана переменная окружения VK_TOKEN.")
     try:
