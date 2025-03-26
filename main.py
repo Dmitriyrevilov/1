@@ -1,6 +1,7 @@
 import requests
 import os
 from urllib.parse import urlparse
+import argparse
 
 
 def shorten_link(token, url):
@@ -47,7 +48,12 @@ def is_shorten_link(token, url):
 
 
 if __name__ == "__main__":
-    url = input("Введите ссылку: ")
+    parser = argparse.ArgumentParser(
+        description="Сокращает ссылки или показывает количество переходов по сокращенной ссылке VK."
+    )
+    parser.add_argument("url", help="Ссылка для сокращения или анализа")
+    args = parser.parse_args()
+    url = args.url
     try:
         token = os.environ["VK_TOKEN"]
     except KeyError:
